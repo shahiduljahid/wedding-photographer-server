@@ -5,6 +5,7 @@ const app = express();
 const MongoClient = require("mongodb").MongoClient;
 const port = 4000;
 
+
 const uri = `mongodb+srv://doctor:s01955298739@cluster0.z2baq.mongodb.net/weddings?retryWrites=true&w=majority`;
 
 require("dotenv").config();

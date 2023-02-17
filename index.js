@@ -5,11 +5,11 @@ const app = express();
 const MongoClient = require("mongodb").MongoClient;
 const ObjectId = require("mongodb").ObjectID;
 const port = 4000;
-
-
-const uri = `mongodb+srv://doctor:s01955298739@cluster0.z2baq.mongodb.net/weddings?retryWrites=true&w=majority`;
-
 require("dotenv").config();
+
+const uri = process.env.DB_URI;
+
+
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -97,3 +97,5 @@ client.connect((err) => {
 });
 
 app.listen(process.env.PORT || port);
+
+module.exports = app;

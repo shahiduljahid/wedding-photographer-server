@@ -55,5 +55,15 @@ router.patch("/updateStatus", async (req, res) => {
     res.json({ error: err });
   }
 });
+router.delete("/:id", async (req, res) => {
+    try {
+      const data = await Appointment.findByIdAndDelete({
+        _id: req.params.id,
+      });
+      res.send(data);
+    } catch {
+      res.send("Wrong parameter detected");
+    }
+  });
 
 module.exports = router;

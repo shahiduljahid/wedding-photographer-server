@@ -1,125 +1,66 @@
+// external imports
 const express = require("express");
-const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const cors = require("cors");
-const app = express();
-const MongoClient = require("mongodb").MongoClient;
-const ObjectId = require("mongodb").ObjectID;
-const port = 4000;
+const bodyParser = require("body-parser");
 require("dotenv").config();
 
+// internal imports
+const AdminRouter = require("./routers/AdminRouter");
+const AppointmentRoute = require("./routers/AppointmentRoute");
+const ReviewRoute = require("./routers/ReviewRoute");
+const ServiceRoute = require("./routers/ServiceRoute");
+
+const app = express();
+// database connection
 const uri = process.env.DB_URI;
+mongoose.set("strictQuery", false);
+mongoose
+  .connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("database connection successful!"))
+  .catch((err) => console.log(err));
 
-app.use(bodyParser.json());
+const port = process.env.PORT || 5050;
+
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin,X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PATCH,PUT,DELETE,OPTIONS"
+  );
+  next();
+});
 app.use(cors());
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
-const client = new MongoClient(
-  uri,
-  { useUnifiedTopology: true },
-  { useNewUrlParser: true },
-  { connectTimeoutMS: 30000 },
-  { keepAlive: 1 }
+app.use(
+  bodyParser.json({
+    limit: "50MB",
+  })
 );
-client.connect((err) => {
-  console.log("database connected");
-  const weddingCollection = client.db("weddings").collection("appointments");
-  const adminCollection = client.db("weddings").collection("admins");
-  const serviceCollection = client.db("weddings").collection("services");
-  const reviewCollection = client.db("weddings").collection("reviews");
 
-  app.post("/addappointment", (req, res) => {
-    const appointment = req.body;
-    console.log(appointment);
-    weddingCollection
-      .insertOne(appointment)
-      .then((result) => {
-        res.send(result.insertedCount > 0);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  });
+app.use(
+  bodyParser.urlencoded({
+    limit: "50MB",
+    parameterLimit: 100000,
+    extended: true,
+  })
+);
+app.use(express.json());
+//routing setup
+app.use("/admin", AdminRouter);
+app.use("/appointment", AppointmentRoute);
+app.use("/review", ReviewRoute);
+app.use("/service", ServiceRoute);
 
-  app.post("/addAdmin", (req, res) => {
-    const admin = req.body;
-    console.log(admin);
-    adminCollection
-      .insertOne(admin)
-      .then((result) => {
-        res.send(result.insertedCount > 0);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  });
-
-  app.post("/admin", (req, res) => {
-    const admin = req.body.admin;
-    console.log(admin);
-    adminCollection.find({ admin: admin }).toArray((err, documents) => {
-      res.send(documents.length > 0);
-    });
-  });
-
-  app.patch("/updateStatus", (req, res) => {
-    const id = req.body.bookingId;
-    const status = req.body.status;
-    weddingCollection
-      .updateOne({ _id: ObjectId(id) }, { $set: { status: status } })
-      .then((result) => {
-        res.send(result.modifiedCount > 0);
-      });
-  });
-
-  app.get("/totalAppointments", (req, res) => {
-    weddingCollection.find({}).toArray((err, documents) => {
-      res.send(documents);
-    });
-  });
-  app.get("/services", (req, res) => {
-    serviceCollection.find({}).toArray((err, documents) => {
-      res.send(documents);
-    });
-  });
-  app.post("/userService", (req, res) => {
-    const user = req.body.user;
-
-    weddingCollection.find({ user: user }).toArray((err, documents) => {
-      res.send(documents);
-    });
-  });
-  app.post("/addService", (req, res) => {
-    const service = req.body;
-    serviceCollection
-      .insertOne(service)
-      .then((result) => {
-        res.send(result.insertedCount > 0);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  });
-  app.post("/addReview", (req, res) => {
-    const review = req.body;
-    reviewCollection
-      .insertOne(review)
-      .then((result) => {
-        res.send(result.insertedCount > 0);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  });
-  app.get("/reviews", (req, res) => {
-    reviewCollection.find({}).toArray((err, documents) => {
-      res.send(documents);
-    });
-  });
+app.use("/", (req, res) => {
+  res.json({ mess: "iam ALive" });
 });
-
-app.listen(process.env.PORT || port);
-
-module.exports = app;
+app.listen(port, () => {
+  console.log(`listening on port ${port}`);
+});

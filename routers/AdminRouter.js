@@ -17,7 +17,7 @@ router.post("/addAdmin", async (req, res) => {
     res.json({ err: "unknown error" });
   }
 });
-router.post("/admin", async (req, res) => {
+router.post("/", async (req, res) => {
   const admin = req.body.admin;
   try {
     const docs = await Admin.find({ admin: admin });
